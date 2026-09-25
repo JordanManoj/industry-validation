@@ -1,6 +1,6 @@
 import { getDb } from "@/db/client";
 import { interviews, constructTallies, cardSorts, vignetteJourneys, verbatims, surveyResponses } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, asc } from "drizzle-orm";
 import { InterviewFull, SurveyResponseFull } from "./analytics";
 
 export async function listInterviewsFull(): Promise<InterviewFull[]> {
@@ -59,4 +59,11 @@ export async function listSurveyResponsesFull(): Promise<SurveyResponseFull[]> {
     section6: (r.section6 as SurveyResponseFull["section6"]) ?? null,
     section7: (r.section7 as SurveyResponseFull["section7"]) ?? null,
   }));
+}
+
+// Raw rows for the Responses page and CSV export, oldest first so the
+// "Response #" numbering stays stable as new responses arrive.
+export async function listSurveyResponsesRaw() {
+  const db = await getDb();
+  return db.select().from(surveyResponses).orderBy(asc(surveyResponses.startedAt));
 }
