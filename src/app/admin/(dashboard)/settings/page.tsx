@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { isSurveyOpen } from "@/lib/settings";
 import SurveyToggle from "./SurveyToggle";
 
@@ -6,6 +7,10 @@ export const dynamic = "force-dynamic";
 export default async function SettingsPage() {
   const open = await isSurveyOpen();
   const token = process.env.SURVEY_LINK_TOKEN || "dev-token-change-me";
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
+  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  const surveyUrl = `${proto}://${host}/s/${token}`;
 
   return (
     <div className="flex flex-col gap-8 max-w-2xl">
@@ -30,12 +35,18 @@ export default async function SettingsPage() {
           segment is set by the <code>SURVEY_LINK_TOKEN</code> environment variable — set your own
           value before deploying, and rotate it if it leaks.
         </p>
-        <code
-          className="mt-3 block break-all rounded-md border p-3 text-sm"
+        <a
+          href={surveyUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-3 block break-all rounded-md border p-3 font-mono text-sm"
           style={{ background: "var(--page)", borderColor: "var(--gridline)", color: "var(--text-primary)" }}
         >
-          {`{your-domain}/s/${token}`}
-        </code>
+          {surveyUrl}
+        </a>
+        <p className="mt-2 text-xs" style={{ color: "var(--text-muted)" }}>
+          Uses the address you opened this page from — open the admin on the domain you want participants to see.
+        </p>
       </section>
     </div>
   );
