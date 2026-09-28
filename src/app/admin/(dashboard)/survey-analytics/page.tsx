@@ -18,7 +18,6 @@ import {
   OWNER_OPTIONS,
   WOULD_READ_OPTIONS,
   VIGNETTE_CHOICE_OPTIONS,
-  CONSTANT_SUM_CATEGORIES,
   SHARE_CHANGED_OPTIONS,
   EFFICIENCY_OPTIONS,
   PANEL_WILLINGNESS_OPTIONS,
@@ -166,15 +165,6 @@ export default async function SurveyAnalyticsPage({
                 <div className="mt-2">
                   <HBarChart data={breakdownData(portfolio.wouldReadBreakdown, WOULD_READ_OPTIONS, portfolio.n)} formatValue={(v) => `${(v * 100).toFixed(0)}%`} />
                 </div>
-              </div>
-            </div>
-            <div className="mt-6">
-              <h3 className="text-sm font-medium" style={{ color: "var(--text-secondary)" }}>4.3 Mean points allocated (of 100)</h3>
-              <div className="mt-2">
-                <HBarChart
-                  data={CONSTANT_SUM_CATEGORIES.map((o) => ({ key: o.value, label: o.label, value: portfolio.meanPoints[o.value] ?? 0 }))}
-                  formatValue={(v) => v.toFixed(0)}
-                />
               </div>
             </div>
           </section>

@@ -10,7 +10,6 @@ import {
   CONSTANT_SUM_CATEGORIES,
   DISTINCTION_MATCH_OPTIONS,
   DISTINGUISH_OPTIONS,
-  DISTRUST_OPTIONS,
   EFFICIENCY_OPTIONS,
   FORMAL_TRAINING_OPTIONS,
   FORMAT_OPTIONS,
@@ -117,7 +116,6 @@ export function describeResponse(r: ResponseRow): AnswerSection[] {
   const s7 = sec(r, "section7");
 
   const picks = Array.isArray(s3b.maxDiffPicks) ? (s3b.maxDiffPicks as Rec[]) : [];
-  const constantSum = (s4.constantSum as Rec | undefined) ?? {};
 
   const sections: AnswerSection[] = [
     {
@@ -135,7 +133,7 @@ export function describeResponse(r: ResponseRow): AnswerSection[] {
     {
       title: "2. Current practice",
       answers: [
-        { question: "Has AI-generated work from an early-career team member got further through your process than it should have?", answer: label(SLIPPED_2_1_OPTIONS, s2.gotThroughUnprompted) },
+        { question: "Has a junior employee ever submitted AI work that was wrong or unchecked, and your team failed to catch the mistake before it went too far?", answer: label(SLIPPED_2_1_OPTIONS, s2.gotThroughUnprompted) },
         { question: "What let it through?", answer: text(s2.whatLetItThrough) },
         { question: "When you assess an early-career candidate, are they allowed to use AI?", answer: label(ASSESS_AI_USE_OPTIONS, s2.assessAiUse) },
         { question: "What are you watching for?", answer: text(s2.whatWatchingFor) },
@@ -167,11 +165,6 @@ export function describeResponse(r: ResponseRow): AnswerSection[] {
       answers: [
         { question: "Which one gets the interview?", answer: label(VIGNETTE_CHOICE_OPTIONS, s4.choice) },
         { question: "Would you actually read Candidate B's record?", answer: label(WOULD_READ_OPTIONS, s4.wouldRead) },
-        ...CONSTANT_SUM_CATEGORIES.map((c) => ({
-          question: `Points out of 100 — ${c.label}`,
-          answer: typeof constantSum[c.value] === "number" ? String(constantSum[c.value]) : "",
-        })),
-        { question: "What would make you distrust a record like that?", answer: withOther(labels(DISTRUST_OPTIONS, s4.distrust), s4.distrustOther) },
       ],
     },
     {

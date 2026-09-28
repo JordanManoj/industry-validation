@@ -40,8 +40,6 @@ export interface SurveyResponseFull {
   section4: {
     choice?: string;
     wouldRead?: string;
-    constantSum?: Record<string, number>;
-    distrust?: string[];
   } | null;
   section5: {
     stage?: string[];
@@ -201,7 +199,6 @@ export interface PortfolioCurrency {
   shareChoosingB: number;
   choiceBreakdown: Record<string, number>;
   wouldReadBreakdown: Record<string, number>;
-  meanPoints: Record<string, number>;
   k3Pass: boolean | "insufficient_data";
 }
 
@@ -210,27 +207,20 @@ export function computePortfolioCurrency(rows: SurveyResponseFull[]): PortfolioC
   const n = complete.length;
   const choiceBreakdown: Record<string, number> = {};
   const wouldReadBreakdown: Record<string, number> = {};
-  const sums: Record<string, number> = { faster_interview: 0, higher_band: 0, shorter_ramp: 0, more_autonomy: 0, nothing: 0 };
   let chosenB = 0;
   for (const r of complete) {
     const s4 = r.section4!;
     if (s4.choice) choiceBreakdown[s4.choice] = (choiceBreakdown[s4.choice] ?? 0) + 1;
     if (s4.choice === "b") chosenB += 1;
     if (s4.wouldRead) wouldReadBreakdown[s4.wouldRead] = (wouldReadBreakdown[s4.wouldRead] ?? 0) + 1;
-    if (s4.constantSum) {
-      for (const k of Object.keys(sums)) sums[k] += s4.constantSum[k] ?? 0;
-    }
   }
-  const meanPoints: Record<string, number> = {};
-  for (const k of Object.keys(sums)) meanPoints[k] = n ? sums[k] / n : 0;
   const shareChoosingB = n ? chosenB / n : 0;
   return {
     n,
     shareChoosingB,
     choiceBreakdown,
     wouldReadBreakdown,
-    meanPoints,
-    k3Pass: n === 0 ? "insufficient_data" : shareChoosingB >= 0.6 && meanPoints.nothing < 90,
+    k3Pass: n === 0 ? "insufficient_data" : shareChoosingB >= 0.6,
   };
 }
 
