@@ -7,7 +7,7 @@ import {
   ROLE_OPTIONS, SECTOR_OPTIONS, ORG_SIZE_OPTIONS, HIRE_VOLUME_OPTIONS, INTAKE_TREND_OPTIONS,
   AI_MATURITY_OPTIONS, FORMAL_TRAINING_OPTIONS, SLIPPED_2_1_OPTIONS, ASSESS_AI_USE_OPTIONS,
   DISTINCTION_MATCH_OPTIONS, FRAMING_CHANGED_OPTIONS, VIGNETTE_CHOICE_OPTIONS, WOULD_READ_OPTIONS,
-  CONSTANT_SUM_CATEGORIES, DISTRUST_OPTIONS, STAGE_OPTIONS, FORMAT_OPTIONS, OWNER_OPTIONS,
+  CONSTANT_SUM_CATEGORIES, STAGE_OPTIONS, FORMAT_OPTIONS, OWNER_OPTIONS,
   ORG_AI_CAPABILITY_OPTIONS, ORG_AI_MEASURE_OPTIONS, SHARE_CHANGED_OPTIONS, EFFICIENCY_OPTIONS,
   DISTINGUISH_OPTIONS, PANEL_WILLINGNESS_OPTIONS, Opt,
 } from "@/lib/surveyOptions";
@@ -75,7 +75,7 @@ export default function SurveyWizard({ token }: { token: string }) {
   const [s3bPicks, setS3bPicks] = useState<Record<number, { best: string; worst: string }>>({});
   const [hardestToAssess, setHardestToAssess] = useState("");
   const [framingChanged, setFramingChanged] = useState("");
-  const [s4, setS4] = useState<AnyRec>({ choice: "", wouldRead: "", constantSum: { faster_interview: 0, higher_band: 0, shorter_ramp: 0, more_autonomy: 0, nothing: 0 }, distrust: [] });
+  const [s4, setS4] = useState<AnyRec>({ choice: "", wouldRead: "" });
   const [s5, setS5] = useState<AnyRec>({ stage: [], format: [], owner: "", attentionCheck: "" });
   const [s6, setS6] = useState<AnyRec>({ capability: [], measure: [] });
   const [s7, setS7] = useState<AnyRec>({ email: "" });
@@ -130,10 +130,6 @@ export default function SurveyWizard({ token }: { token: string }) {
 
   const current = steps[step];
 
-  function constantSumTotal() {
-    const cs = s4.constantSum as Record<string, number>;
-    return Object.values(cs).reduce((a, b) => a + (Number(b) || 0), 0);
-  }
 
   function maxDiffComplete() {
     return maxDiffSets.every((set) => {
@@ -158,8 +154,6 @@ export default function SurveyWizard({ token }: { token: string }) {
     if (current.key === "s4") {
       if (!s4.choice) { setError("Please choose a candidate."); return false; }
       if (!s4.wouldRead) { setError("Please answer whether you'd read the record."); return false; }
-      if (constantSumTotal() !== 100) { setError(`Your five points must add up to exactly 100 (currently ${constantSumTotal()}).`); return false; }
-      if (!(s4.distrust as string[])?.length) { setError("Please select at least one option."); return false; }
     }
     return true;
   }
@@ -262,7 +256,7 @@ export default function SurveyWizard({ token }: { token: string }) {
 
         {current.key === "s2" && (
           <div className="flex flex-col gap-5">
-            <Field label="In the last 12 months, has AI-generated work from an early-career team member got further through your process than it should have?">
+            <Field label="Has a junior employee ever submitted AI work that was wrong or unchecked, and your team failed to catch the mistake before it went too far?">
               <SingleSelect value={s2.gotThroughUnprompted as string ?? ""} onChange={(v) => setS2({ ...s2, gotThroughUnprompted: v })} options={SLIPPED_2_1_OPTIONS} />
             </Field>
             <Field label="In one or two sentences: what let it through?">
@@ -360,24 +354,6 @@ export default function SurveyWizard({ token }: { token: string }) {
             </Field>
             <Field label="Would you actually read Candidate B's record?" required>
               <SingleSelect value={s4.wouldRead as string} onChange={(v) => setS4({ ...s4, wouldRead: v })} options={WOULD_READ_OPTIONS} />
-            </Field>
-            <Field label={`If everything else were identical, what would that record be worth? Distribute 100 points across these. (Total: ${constantSumTotal()}/100)`} required>
-              <div className="flex flex-col gap-2">
-                {CONSTANT_SUM_CATEGORIES.map((o) => (
-                  <div key={o.value} className="flex items-center gap-3">
-                    <span className="flex-1 text-sm" style={{ color: "var(--text-primary)" }}>{o.label}</span>
-                    <input
-                      type="number" min={0} max={100}
-                      className="w-20 rounded-md border px-2 py-1 text-right text-sm" style={inputStyle}
-                      value={(s4.constantSum as Record<string, number>)[o.value]}
-                      onChange={(e) => setS4({ ...s4, constantSum: { ...(s4.constantSum as object), [o.value]: Number(e.target.value) || 0 } })}
-                    />
-                  </div>
-                ))}
-              </div>
-            </Field>
-            <Field label="What would make you distrust a record like that?" required>
-              <MultiSelect value={s4.distrust as string[]} onChange={(v) => setS4({ ...s4, distrust: v })} options={DISTRUST_OPTIONS} />
             </Field>
           </div>
         )}

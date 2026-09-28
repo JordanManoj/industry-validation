@@ -49,25 +49,10 @@ export const section3bSchema = z
   );
 export type Section3B = z.infer<typeof section3bSchema>;
 
-export const section4Schema = z
-  .object({
-    choice: z.string().min(1),
-    wouldRead: z.string().min(1),
-    constantSum: z.object({
-      faster_interview: z.number().min(0).max(100),
-      higher_band: z.number().min(0).max(100),
-      shorter_ramp: z.number().min(0).max(100),
-      more_autonomy: z.number().min(0).max(100),
-      nothing: z.number().min(0).max(100),
-    }),
-    distrust: z.array(z.string()).min(1),
-    distrustOther: z.string().optional(),
-  })
-  .refine(
-    (v) =>
-      Object.values(v.constantSum).reduce((a, b) => a + b, 0) === 100,
-    { message: "The five points must add up to exactly 100" }
-  );
+export const section4Schema = z.object({
+  choice: z.string().min(1),
+  wouldRead: z.string().min(1),
+});
 export type Section4 = z.infer<typeof section4Schema>;
 
 export const section5Schema = z.object({
