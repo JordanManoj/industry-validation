@@ -3,11 +3,12 @@
 // use the same question wording and option labels as the survey itself.
 
 import { surveyResponses } from "@/db/schema";
+import { hardestToAssessCodes } from "@/lib/analytics";
+import type { Invite } from "@/lib/invites";
 import { CARD_BY_CODE } from "@/lib/constructs";
 import {
   AI_MATURITY_OPTIONS,
   ASSESS_AI_USE_OPTIONS,
-  CONSTANT_SUM_CATEGORIES,
   DISTINCTION_MATCH_OPTIONS,
   DISTINGUISH_OPTIONS,
   EFFICIENCY_OPTIONS,
@@ -81,12 +82,6 @@ export function statusLabel(r: ResponseRow): string {
   return r.status;
 }
 
-export function attentionLabel(r: ResponseRow): string {
-  if (r.attentionCheckPassed === true) return "Passed";
-  if (r.attentionCheckPassed === false) return "Failed";
-  return "";
-}
-
 export function formatDuration(seconds: number | null): string {
   if (!seconds) return "";
   const m = Math.floor(seconds / 60);
@@ -156,7 +151,7 @@ export function describeResponse(r: ResponseRow): AnswerSection[] {
             { question: `Set ${i + 1} — least important`, answer: card(p.worst) },
           ];
         }),
-        { question: "Which one of those is hardest to assess in your hiring process today?", answer: card(s3b.hardestToAssess) },
+        { question: "Which of them are hardest to assess in your hiring process today? (max of 4)", answer: hardestToAssessCodes(s3b.hardestToAssess).map(card).join("; ") },
         { question: "Did the skills/cognition distinction change how you answered? (Arm B only)", answer: label(FRAMING_CHANGED_OPTIONS, s3b.framingChanged) },
       ],
     },
@@ -173,7 +168,6 @@ export function describeResponse(r: ResponseRow): AnswerSection[] {
         { question: "At which stage would a record like Candidate B's realistically be used?", answer: labels(STAGE_OPTIONS, s5.stage) },
         { question: "In what form would it have to arrive to be usable?", answer: labels(FORMAT_OPTIONS, s5.format) },
         { question: "Who decides whether a new candidate signal enters your hiring process?", answer: label(OWNER_OPTIONS, s5.owner) },
-        { question: "Attention check (correct answer: A shorter ramp-up expectation)", answer: label(CONSTANT_SUM_CATEGORIES, s5.attentionCheck) },
         { question: "First question you'd ask a college with assessed evidence of this?", answer: text(s5.firstQuestion) },
       ],
     },
@@ -205,7 +199,7 @@ export function describeResponse(r: ResponseRow): AnswerSection[] {
 
 // Excel runs cells starting with these as formulas; respondents type free
 // text, so neutralise them.
-function csvCell(value: string): string {
+export function csvCell(value: string): string {
   const safe = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
   return /[",\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
 }
@@ -213,29 +207,33 @@ function csvCell(value: string): string {
 export interface NumberedResponse {
   number: number; // position among all responses, oldest first — same on page and CSV
   row: ResponseRow;
+  invite: Invite | null; // who it was sent to, for personal-link responses
 }
 
-export function numberResponses(rows: ResponseRow[]): NumberedResponse[] {
-  return rows.map((row, i) => ({ number: i + 1, row }));
+export function numberResponses(rows: ResponseRow[], invites: Map<string, Invite>): NumberedResponse[] {
+  return rows.map((row, i) => ({ number: i + 1, row, invite: row.inviteId ? invites.get(row.inviteId) ?? null : null }));
 }
 
 export function responsesToCsv(entries: NumberedResponse[]): string {
-  const meta = ["Response #", "Response ID", "Status", "Arm", "Started (UTC)", "Completed (UTC)", "Duration (seconds)", "Attention check"];
+  const meta = ["Response #", "Response ID", "Respondent", "Respondent email", "Organisation", "Link", "Status", "Arm", "Started (UTC)", "Completed (UTC)", "Duration (seconds)"];
   const template = describeResponse({} as ResponseRow);
   const questionHeaders = template.flatMap((s) => s.answers.map((a) => `${s.title.split(".")[0]}. ${a.question}`));
 
   const lines = [[...meta, ...questionHeaders].map(csvCell).join(",")];
-  for (const { number, row: r } of entries) {
+  for (const { number, row: r, invite } of entries) {
     const answers = describeResponse(r).flatMap((s) => s.answers.map((a) => a.answer));
     const cells = [
       String(number),
       r.id,
+      invite?.name ?? "",
+      invite?.email ?? "",
+      invite?.organisation ?? "",
+      invite ? "Personal" : "Shared (anonymous)",
       statusLabel(r),
       r.arm,
       formatTimestamp(r.startedAt),
       formatTimestamp(r.completedAt),
       r.durationSeconds?.toString() ?? "",
-      attentionLabel(r),
       ...answers,
     ];
     lines.push(cells.map(csvCell).join(","));

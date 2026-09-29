@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { listSurveyResponsesRaw } from "@/lib/data";
+import { listInvitesById } from "@/lib/invites";
 import {
-  attentionLabel,
   describeResponse,
   formatDuration,
   formatTimestamp,
@@ -20,7 +20,7 @@ export default async function ResponsesPage({
   const { show } = await searchParams;
   const showAll = show === "all";
 
-  const all = numberResponses(await listSurveyResponsesRaw());
+  const all = numberResponses(await listSurveyResponsesRaw(), await listInvitesById());
   const completeCount = all.filter((e) => e.row.status === "complete").length;
   // Newest first on screen; numbers stay tied to arrival order.
   const visible = all.filter((e) => showAll || e.row.status === "complete").reverse();
@@ -73,8 +73,7 @@ export default async function ResponsesPage({
         </p>
       )}
 
-      {visible.map(({ number, row }) => {
-        const attention = attentionLabel(row);
+      {visible.map(({ number, row, invite }) => {
         return (
           <details
             key={row.id}
@@ -83,6 +82,9 @@ export default async function ResponsesPage({
           >
             <summary className="flex cursor-pointer flex-wrap items-center gap-x-4 gap-y-1 p-4 text-sm">
               <span className="font-semibold" style={{ color: "var(--text-primary)" }}>Response #{number}</span>
+              <span style={{ color: "var(--text-primary)" }}>
+                {invite ? [invite.name, invite.organisation].filter(Boolean).join(" · ") : "Anonymous (shared link)"}
+              </span>
               <span style={{ color: row.status === "complete" ? "var(--status-good)" : "var(--text-muted)" }}>
                 {statusLabel(row)}
               </span>
@@ -91,11 +93,6 @@ export default async function ResponsesPage({
               {row.durationSeconds ? (
                 <span style={{ color: "var(--text-secondary)" }}>{formatDuration(row.durationSeconds)}</span>
               ) : null}
-              {attention && (
-                <span style={{ color: attention === "Passed" ? "var(--status-good)" : "var(--status-critical)" }}>
-                  Attention check {attention.toLowerCase()}
-                </span>
-              )}
             </summary>
 
             <div className="flex flex-col gap-5 border-t p-4" style={{ borderColor: "var(--gridline)" }}>
@@ -122,7 +119,9 @@ export default async function ResponsesPage({
                     </section>
                   ))
               )}
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>Response ID: {row.id}</p>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                {invite?.email ? `${invite.email} · ` : ""}Response ID: {row.id}
+              </p>
             </div>
           </details>
         );

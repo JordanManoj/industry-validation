@@ -1,5 +1,4 @@
 import { CARD_BY_CODE, CARD_DECK, Category } from "./constructs";
-import { ATTENTION_CHECK_CORRECT } from "./surveySchemas";
 
 // ---------------------------------------------------------------------------
 // Types describing the joined rows the dashboard pages pass in. Kept
@@ -34,7 +33,7 @@ export interface SurveyResponseFull {
   section1: Record<string, unknown> | null;
   section3b: {
     maxDiffPicks?: { itemCodes: string[]; best: string; worst: string }[];
-    hardestToAssess?: string;
+    hardestToAssess?: string | string[]; // single code in responses before 29 Sep, up to 4 after
     framingChanged?: string | null;
   } | null;
   section4: {
@@ -164,6 +163,11 @@ export function computeFramingEffect(rows: SurveyResponseFull[]): FramingEffect 
 // share who named the item hardest to assess (3B.2).
 // ---------------------------------------------------------------------------
 
+export function hardestToAssessCodes(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((v): v is string => typeof v === "string");
+  return typeof value === "string" && value ? [value] : [];
+}
+
 export interface WedgeCell {
   code: string;
   text: string;
@@ -177,10 +181,10 @@ export function computeWedgeMatrix(rows: SurveyResponseFull[]): WedgeCell[] {
   const utilities = computeMaxDiffUtilities(complete);
   const counts = new Map<string, number>();
   for (const r of complete) {
-    const code = r.section3b?.hardestToAssess;
-    if (code) counts.set(code, (counts.get(code) ?? 0) + 1);
+    for (const code of hardestToAssessCodes(r.section3b?.hardestToAssess)) counts.set(code, (counts.get(code) ?? 0) + 1);
   }
-  const denom = complete.filter((r) => r.section3b?.hardestToAssess).length || 1;
+  // Share of respondents who picked each item (they can pick up to 4).
+  const denom = complete.filter((r) => hardestToAssessCodes(r.section3b?.hardestToAssess).length).length || 1;
   return utilities.map((u) => ({
     code: u.code,
     text: u.text,
@@ -409,11 +413,4 @@ function medianOf(nums: number[]): number {
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
-export function attentionCheckPassRate(rows: SurveyResponseFull[]): { passed: number; total: number } {
-  const complete = completedOnly(rows);
-  const withCheck = complete.filter((r) => r.attentionCheckPassed !== null);
-  const passed = withCheck.filter((r) => r.attentionCheckPassed).length;
-  return { passed, total: withCheck.length };
-}
 
-export { ATTENTION_CHECK_CORRECT };

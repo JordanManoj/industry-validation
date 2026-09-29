@@ -29,11 +29,12 @@ export default async function SettingsPage() {
       </section>
 
       <section className="rounded-lg border p-5" style={{ background: "var(--surface)", borderColor: "var(--gridline)" }}>
-        <h2 className="font-medium" style={{ color: "var(--text-primary)" }}>Secured survey link</h2>
+        <h2 className="font-medium" style={{ color: "var(--text-primary)" }}>Shared survey link (anonymous)</h2>
         <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
-          The one link to send participants. It only works while the gate above is open. The path
-          segment is set by the <code>SURVEY_LINK_TOKEN</code> environment variable — set your own
-          value before deploying, and rotate it if it leaks.
+          One link anyone can use — responses through it are anonymous. To see who has filled the
+          survey in, send personal links from <a href="/admin/invites" className="underline">Invites</a> instead.
+          Both only work while the gate above is open. The path segment is set by the{" "}
+          <code>SURVEY_LINK_TOKEN</code> environment variable — rotate it if it leaks.
         </p>
         <a
           href={surveyUrl}
