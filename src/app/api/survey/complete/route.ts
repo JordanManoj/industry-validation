@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/db/client";
 import { surveyResponses } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { section1Schema, section3bSchema, section4Schema, ATTENTION_CHECK_CORRECT } from "@/lib/surveySchemas";
+import { section1Schema, section3bSchema, section4Schema } from "@/lib/surveySchemas";
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -22,13 +22,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: "required sections incomplete" }, { status: 400 });
   }
 
-  const section5 = existing.section5 as { attentionCheck?: string } | null;
-  const attentionCheckPassed = section5?.attentionCheck ? section5.attentionCheck === ATTENTION_CHECK_CORRECT : null;
   const durationSeconds = Math.round((Date.now() - new Date(existing.startedAt).getTime()) / 1000);
 
   await db
     .update(surveyResponses)
-    .set({ status: "complete", completedAt: new Date(), durationSeconds, attentionCheckPassed })
+    .set({ status: "complete", completedAt: new Date(), durationSeconds })
     .where(eq(surveyResponses.id, id));
 
   return NextResponse.json({ ok: true });

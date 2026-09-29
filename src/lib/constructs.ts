@@ -22,7 +22,7 @@ export const CARD_DECK: CardItem[] = [
   { code: "C6", number: 6, category: "cognition", text: "Defends their work under questioning — owns the decision even though AI produced the draft" },
   { code: "C7", number: 7, category: "cognition", text: "Knows the edge of what they know, and escalates instead of bluffing" },
   { code: "S1", number: 8, category: "skill", text: "Writes prompts that get good results first time" },
-  { code: "S2", number: 9, category: "skill", text: "Knows their way around the main AI tools, and which one to use when" },
+  { code: "S2", number: 9, category: "skill", text: "Knows their way around the many AI tools, and which one to use when" },
   { code: "S3", number: 10, category: "skill", text: "Can set up retrieval over the company's own documents, or build a working agent" },
   { code: "S4", number: 11, category: "skill", text: "Has actually changed how they work day to day to use AI, not just tried it" },
   { code: "D1", number: 12, category: "decoy", text: "Writes and speaks clearly, to the right audience" },

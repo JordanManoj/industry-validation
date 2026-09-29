@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { COOKIE_NAME, isValidSession } from "@/lib/auth";
 import { listSurveyResponsesRaw } from "@/lib/data";
+import { listInvitesById } from "@/lib/invites";
 import { numberResponses, responsesToCsv } from "@/lib/responseExport";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +12,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: false }, { status: 401 });
   }
   const onlyComplete = req.nextUrl.searchParams.get("status") !== "all";
-  const entries = numberResponses(await listSurveyResponsesRaw()).filter(
+  const entries = numberResponses(await listSurveyResponsesRaw(), await listInvitesById()).filter(
     (e) => !onlyComplete || e.row.status === "complete"
   );
 

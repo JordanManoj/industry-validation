@@ -7,7 +7,6 @@ import {
   computePortfolioCurrency,
   tallyMultiSelect,
   tallySingleSelect,
-  attentionCheckPassRate,
   SurveyResponseFull,
 } from "@/lib/analytics";
 import { HBarChart, Legend, StatTile, StatusBadge, ScatterQuadrant, CATEGORY_COLOR, CATEGORY_LABEL } from "@/components/Charts";
@@ -52,7 +51,6 @@ export default async function SurveyAnalyticsPage({
   const framing = computeFramingEffect(rows);
   const wedge = computeWedgeMatrix(rows);
   const portfolio = computePortfolioCurrency(rows);
-  const attention = attentionCheckPassRate(rows);
 
   const stageCounts = tallyMultiSelect(rows, (r) => r.section5?.stage);
   const formatCounts = tallyMultiSelect(rows, (r) => r.section5?.format);
@@ -225,7 +223,6 @@ export default async function SurveyAnalyticsPage({
           <section className="rounded-lg border p-5" style={{ background: "var(--surface)", borderColor: "var(--gridline)" }}>
             <h2 className="font-medium" style={{ color: "var(--text-primary)" }}>Data quality</h2>
             <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3">
-              <StatTile label="Attention check pass rate" value={attention.total ? `${((attention.passed / attention.total) * 100).toFixed(0)}%` : "—"} hint={`n=${attention.total}`} />
               <StatTile label="Started" value={`${rows.length}`} />
               <StatTile label="Completed" value={`${complete.length}`} hint={rows.length ? `${((complete.length / rows.length) * 100).toFixed(0)}% completion` : undefined} />
             </div>

@@ -40,7 +40,7 @@ const maxDiffPickSchema = z.object({
 export const section3bSchema = z
   .object({
     maxDiffPicks: z.array(maxDiffPickSchema).length(5),
-    hardestToAssess: z.string().min(1),
+    hardestToAssess: z.array(z.string()).min(1).max(4),
     framingChanged: z.string().optional().nullable(), // Arm B only
   })
   .refine(
@@ -59,7 +59,6 @@ export const section5Schema = z.object({
   stage: z.array(z.string()).optional(),
   format: z.array(z.string()).optional(),
   owner: z.string().optional().nullable(),
-  attentionCheck: z.string().optional().nullable(), // 5.4, same options as constant-sum categories
   firstQuestion: z.string().optional(),
 });
 export type Section5 = z.infer<typeof section5Schema>;
@@ -81,4 +80,3 @@ export const section7Schema = z.object({
 });
 export type Section7 = z.infer<typeof section7Schema>;
 
-export const ATTENTION_CHECK_CORRECT = "shorter_ramp";

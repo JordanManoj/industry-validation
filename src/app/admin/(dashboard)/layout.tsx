@@ -7,6 +7,7 @@ const NAV = [
   { href: "/admin/kill-criteria", label: "Kill criteria" },
   { href: "/admin/survey-analytics", label: "Survey analytics" },
   { href: "/admin/responses", label: "Responses" },
+  { href: "/admin/invites", label: "Invites" },
   { href: "/admin/settings", label: "Settings" },
 ];
 

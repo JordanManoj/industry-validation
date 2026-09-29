@@ -7,7 +7,9 @@ import {
   jsonb,
   uuid,
   date,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // ---------------------------------------------------------------------------
 // Interview log — the qualitative phase (Discovery Field Kit, 16 interviews).
@@ -129,6 +131,8 @@ export const surveyResponses = pgTable("survey_responses", {
   completedAt: timestamp("completed_at"),
   durationSeconds: integer("duration_seconds"),
   attentionCheckPassed: boolean("attention_check_passed"),
+  // Set when the respondent came in through a personal invite link.
+  inviteId: uuid("invite_id").references(() => surveyInvites.id, { onDelete: "set null" }),
   // Each section stores its answers as JSON, validated against a zod schema
   // in code before every write. Keeps the schema stable while the item
   // wording is still expected to change after the interviews land.
@@ -140,6 +144,23 @@ export const surveyResponses = pgTable("survey_responses", {
   section5: jsonb("section5"),
   section6: jsonb("section6"),
   section7: jsonb("section7"),
+}, (t) => [
+  // One response per personal invite.
+  uniqueIndex("survey_responses_invite_id_key").on(t.inviteId).where(sql`invite_id IS NOT NULL`),
+]);
+
+// ---------------------------------------------------------------------------
+// Personal survey links — one per named respondent, so the team can see who
+// has filled the survey in. The shared SURVEY_LINK_TOKEN link stays anonymous.
+// ---------------------------------------------------------------------------
+
+export const surveyInvites = pgTable("survey_invites", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  token: text("token").notNull().unique(),
+  name: text("name").notNull(),
+  email: text("email"),
+  organisation: text("organisation"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 // ---------------------------------------------------------------------------

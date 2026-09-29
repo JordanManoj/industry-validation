@@ -100,4 +100,16 @@ CREATE TABLE IF NOT EXISTS settings (
   key text PRIMARY KEY,
   value jsonb NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS survey_invites (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  token text NOT NULL UNIQUE,
+  name text NOT NULL,
+  email text,
+  organisation text,
+  created_at timestamp NOT NULL DEFAULT now()
+);
+
+ALTER TABLE survey_responses ADD COLUMN IF NOT EXISTS invite_id uuid REFERENCES survey_invites(id) ON DELETE SET NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS survey_responses_invite_id_key ON survey_responses (invite_id) WHERE invite_id IS NOT NULL;
 `;

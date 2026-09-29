@@ -7,7 +7,7 @@ import {
   ROLE_OPTIONS, SECTOR_OPTIONS, ORG_SIZE_OPTIONS, HIRE_VOLUME_OPTIONS, INTAKE_TREND_OPTIONS,
   AI_MATURITY_OPTIONS, FORMAL_TRAINING_OPTIONS, SLIPPED_2_1_OPTIONS, ASSESS_AI_USE_OPTIONS,
   DISTINCTION_MATCH_OPTIONS, FRAMING_CHANGED_OPTIONS, VIGNETTE_CHOICE_OPTIONS, WOULD_READ_OPTIONS,
-  CONSTANT_SUM_CATEGORIES, STAGE_OPTIONS, FORMAT_OPTIONS, OWNER_OPTIONS,
+  STAGE_OPTIONS, FORMAT_OPTIONS, OWNER_OPTIONS,
   ORG_AI_CAPABILITY_OPTIONS, ORG_AI_MEASURE_OPTIONS, SHARE_CHANGED_OPTIONS, EFFICIENCY_OPTIONS,
   DISTINGUISH_OPTIONS, PANEL_WILLINGNESS_OPTIONS, Opt,
 } from "@/lib/surveyOptions";
@@ -50,6 +50,8 @@ function MultiSelect({ value, onChange, options }: { value: string[]; onChange: 
   );
 }
 
+const MAX_HARDEST_TO_ASSESS = 4;
+
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
@@ -61,7 +63,7 @@ function Field({ label, required, children }: { label: string; required?: boolea
   );
 }
 
-export default function SurveyWizard({ token }: { token: string }) {
+export default function SurveyWizard({ token, personal }: { token: string; personal: boolean }) {
   const router = useRouter();
   const [id, setId] = useState<string | null>(null);
   const [arm, setArm] = useState<"A" | "B" | null>(null);
@@ -73,10 +75,10 @@ export default function SurveyWizard({ token }: { token: string }) {
   const [s2, setS2] = useState<AnyRec>({});
   const [s3a, setS3a] = useState<AnyRec>({});
   const [s3bPicks, setS3bPicks] = useState<Record<number, { best: string; worst: string }>>({});
-  const [hardestToAssess, setHardestToAssess] = useState("");
+  const [hardestToAssess, setHardestToAssess] = useState<string[]>([]);
   const [framingChanged, setFramingChanged] = useState("");
   const [s4, setS4] = useState<AnyRec>({ choice: "", wouldRead: "" });
-  const [s5, setS5] = useState<AnyRec>({ stage: [], format: [], owner: "", attentionCheck: "" });
+  const [s5, setS5] = useState<AnyRec>({ stage: [], format: [], owner: "" });
   const [s6, setS6] = useState<AnyRec>({ capability: [], measure: [] });
   const [s7, setS7] = useState<AnyRec>({ email: "" });
 
@@ -86,7 +88,7 @@ export default function SurveyWizard({ token }: { token: string }) {
     fetch("/api/survey/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: cached?.id }),
+      body: JSON.stringify({ id: cached?.id, token }),
     })
       .then((r) => r.json())
       .then((body) => {
@@ -148,7 +150,7 @@ export default function SurveyWizard({ token }: { token: string }) {
     }
     if (current.key === "s3b") {
       if (!maxDiffComplete()) { setError("Please pick a most-important and least-important item in every set."); return false; }
-      if (!hardestToAssess) { setError("Please choose which item is hardest to assess."); return false; }
+      if (!hardestToAssess.length) { setError("Please choose at least one item that is hard to assess."); return false; }
       if (arm === "B" && !framingChanged) { setError("Please answer whether the distinction changed your answers."); return false; }
     }
     if (current.key === "s4") {
@@ -224,7 +226,12 @@ export default function SurveyWizard({ token }: { token: string }) {
         {current.key === "intro" && (
           <div className="flex flex-col gap-3 text-sm" style={{ color: "var(--text-secondary)" }}>
             <p>This is a short survey (8–10 minutes) for people who hire, manage or develop early-career talent, about how you value AI-related judgement and skills in new hires.</p>
-            <p>Your answers are anonymous. Only a few questions are required — the rest you can skip if you&apos;d rather not answer.</p>
+            <p>
+              {personal
+                ? "This is a personal link, so we'll know you've taken part. Your answers are kept confidential and only seen by the research team."
+                : "Your answers are anonymous."}{" "}
+              Only a few questions are required — the rest you can skip if you&apos;d rather not answer.
+            </p>
           </div>
         )}
 
@@ -326,13 +333,29 @@ export default function SurveyWizard({ token }: { token: string }) {
                 </div>
               );
             })}
-            <Field label="Which one of those is hardest to assess in your hiring process today?" required>
-              <select className={fieldCls} style={inputStyle} value={hardestToAssess} onChange={(e) => setHardestToAssess(e.target.value)}>
-                <option value="">Choose one…</option>
-                {maxDiffSets[0]?.items && Array.from(new Map(maxDiffSets.flatMap((s) => s.items).map((i) => [i.code, i])).values()).map((i) => (
-                  <option key={i.code} value={i.code}>{i.text}</option>
-                ))}
-              </select>
+            <Field label={`Which of them are hardest to assess in your hiring process today? (max of ${MAX_HARDEST_TO_ASSESS})`} required>
+              <div className="flex flex-col gap-2">
+                {Array.from(new Map(maxDiffSets.flatMap((s) => s.items).map((i) => [i.code, i])).values()).map((i) => {
+                  const checked = hardestToAssess.includes(i.code);
+                  const disabled = !checked && hardestToAssess.length >= MAX_HARDEST_TO_ASSESS;
+                  return (
+                    <label
+                      key={i.code}
+                      className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
+                      style={{ borderColor: checked ? "var(--series-cognition)" : "var(--gridline)", background: "var(--surface)", opacity: disabled ? 0.5 : 1 }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        disabled={disabled}
+                        onChange={() => setHardestToAssess(checked ? hardestToAssess.filter((c) => c !== i.code) : [...hardestToAssess, i.code])}
+                      />
+                      <span style={{ color: "var(--text-primary)" }}>{i.text}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>{hardestToAssess.length} of {MAX_HARDEST_TO_ASSESS} selected</p>
             </Field>
             {arm === "B" && (
               <Field label="Having seen the skills/cognition distinction earlier, did it change how you answered these?" required>
@@ -368,9 +391,6 @@ export default function SurveyWizard({ token }: { token: string }) {
             </Field>
             <Field label="Who decides whether a new candidate signal enters your hiring process?">
               <SingleSelect value={s5.owner as string} onChange={(v) => setS5({ ...s5, owner: v })} options={OWNER_OPTIONS} />
-            </Field>
-            <Field label="Please select 'A shorter ramp-up expectation' for this item.">
-              <SingleSelect value={s5.attentionCheck as string} onChange={(v) => setS5({ ...s5, attentionCheck: v })} options={CONSTANT_SUM_CATEGORIES} />
             </Field>
             <Field label="If a college told you their graduates arrive with assessed evidence of this, what's the first question you'd ask them?">
               <textarea className={fieldCls} style={inputStyle} rows={3} value={s5.firstQuestion as string ?? ""} onChange={(e) => setS5({ ...s5, firstQuestion: e.target.value })} />
