@@ -24,8 +24,8 @@ type CardSort = Record<string, number | string | null>;
 type Vignette = Record<string, string | null>;
 type Verbatim = { id: string; block: string | null; constructCode: string | null; quote: string; whyItMatters: string | null };
 
-const inputStyle = { background: "var(--surface)", borderColor: "var(--gridline)", color: "var(--text-primary)" } as const;
-const fieldCls = "rounded-md border px-3 py-2 text-sm w-full";
+const inputStyle = {} as const; // styling comes from the .input class
+const fieldCls = "input";
 const labelCls = "flex flex-col gap-1 text-sm";
 const labelTextStyle = { color: "var(--text-secondary)" } as const;
 
@@ -35,7 +35,7 @@ function SaveButton({ onClick, saved }: { onClick: () => void; saved: boolean })
       type="button"
       onClick={onClick}
       className="rounded-md px-4 py-1.5 text-sm font-medium text-white"
-      style={{ background: saved ? "var(--status-good)" : "var(--series-cognition)" }}
+      style={{ background: saved ? "var(--status-good)" : "var(--accent)" }}
     >
       {saved ? "Saved" : "Save"}
     </button>
@@ -89,12 +89,12 @@ export default function InterviewEditor({
   return (
     <div className="flex max-w-4xl flex-col gap-10 pb-20">
       <div>
-        <h1 className="text-xl font-semibold" style={{ color: "var(--text-primary)" }}>{interview.code}</h1>
+        <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>{interview.code}</h1>
         <p className="text-sm" style={{ color: "var(--text-secondary)" }}>{PERSONAS[interview.persona] ?? interview.persona} · Arm {interview.arm}</p>
       </div>
 
       {/* Respondent log */}
-      <section className="rounded-lg border p-5" style={{ background: "var(--surface)", borderColor: "var(--gridline)" }}>
+      <section className="card p-5">
         <div className="flex items-center justify-between">
           <h2 className="font-medium" style={{ color: "var(--text-primary)" }}>1 · Respondent log</h2>
           <SaveButton saved={!!savedFlags.interview} onClick={() => save("interview", {
@@ -164,7 +164,7 @@ export default function InterviewEditor({
       </section>
 
       {/* Construct tally */}
-      <section className="rounded-lg border p-5" style={{ background: "var(--surface)", borderColor: "var(--gridline)" }}>
+      <section className="card p-5">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="font-medium" style={{ color: "var(--text-primary)" }}>2 · Construct tally (Block 2)</h2>
@@ -193,7 +193,7 @@ export default function InterviewEditor({
       </section>
 
       {/* Card sort */}
-      <section className="rounded-lg border p-5" style={{ background: "var(--surface)", borderColor: "var(--gridline)" }}>
+      <section className="card p-5">
         <div className="flex items-center justify-between">
           <h2 className="font-medium" style={{ color: "var(--text-primary)" }}>3 · Card sort (Block 3)</h2>
           <SaveButton saved={!!savedFlags.cardSort} onClick={() => save("cardSort", cardSort)} />
@@ -209,7 +209,7 @@ export default function InterviewEditor({
       </section>
 
       {/* Vignette and journey */}
-      <section className="rounded-lg border p-5" style={{ background: "var(--surface)", borderColor: "var(--gridline)" }}>
+      <section className="card p-5">
         <div className="flex items-center justify-between">
           <h2 className="font-medium" style={{ color: "var(--text-primary)" }}>4–5 · Vignette and journey</h2>
           <SaveButton saved={!!savedFlags.vignette} onClick={() => save("vignette", vignette)} />
@@ -269,7 +269,7 @@ export default function InterviewEditor({
       </section>
 
       {/* Verbatims */}
-      <section className="rounded-lg border p-5" style={{ background: "var(--surface)", borderColor: "var(--gridline)" }}>
+      <section className="card p-5">
         <h2 className="font-medium" style={{ color: "var(--text-primary)" }}>Verbatims</h2>
         <p className="text-xs" style={{ color: "var(--text-muted)" }}>Their exact words. Do not paraphrase.</p>
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-4">
@@ -277,7 +277,7 @@ export default function InterviewEditor({
           <input className={fieldCls} style={inputStyle} placeholder="Construct code" value={newVerbatim.constructCode} onChange={(e) => setNewVerbatim({ ...newVerbatim, constructCode: e.target.value })} />
           <input className={`${fieldCls} sm:col-span-2`} style={inputStyle} placeholder="Their exact words" value={newVerbatim.quote} onChange={(e) => setNewVerbatim({ ...newVerbatim, quote: e.target.value })} />
           <input className={`${fieldCls} sm:col-span-3`} style={inputStyle} placeholder="Why it matters / where it could be used" value={newVerbatim.whyItMatters} onChange={(e) => setNewVerbatim({ ...newVerbatim, whyItMatters: e.target.value })} />
-          <button type="button" onClick={addVerbatim} className="rounded-md px-3 py-2 text-sm font-medium text-white" style={{ background: "var(--series-cognition)" }}>Add</button>
+          <button type="button" onClick={addVerbatim} className="btn btn-primary">Add</button>
         </div>
         <ul className="mt-5 flex flex-col gap-3">
           {verbatims.map((v) => (

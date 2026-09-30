@@ -28,7 +28,7 @@ export default async function InvitesPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold" style={{ color: "var(--text-primary)" }}>Personal survey links</h1>
+          <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Personal survey links</h1>
           <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
             One link per person, so you can see who has filled the survey in. {invites.length} sent · {counts.complete} completed ·{" "}
             {counts.in_progress} started · {counts.not_started} not opened.
@@ -37,8 +37,7 @@ export default async function InvitesPage() {
         {invites.length > 0 && (
           <a
             href="/api/admin/invites/export"
-            className="rounded-md border px-4 py-2 text-sm"
-            style={{ borderColor: "var(--gridline)", color: "var(--text-primary)" }}
+            className="btn btn-secondary"
           >
             Download links (CSV)
           </a>
@@ -51,12 +50,12 @@ export default async function InvitesPage() {
         </p>
       )}
 
-      <section className="rounded-lg border p-5" style={{ background: "var(--surface)", borderColor: "var(--gridline)" }}>
+      <section className="card p-5">
         <InviteForm />
       </section>
 
       {invites.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border" style={{ borderColor: "var(--gridline)" }}>
+        <div className="card overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead style={{ background: "var(--surface)", color: "var(--text-secondary)" }}>
               <tr>

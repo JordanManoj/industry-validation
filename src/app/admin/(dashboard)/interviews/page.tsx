@@ -11,21 +11,20 @@ export default async function InterviewsPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold" style={{ color: "var(--text-primary)" }}>Interview log</h1>
+          <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Interview log</h1>
           <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
             One row per interview. Log within ten minutes of finishing it.
           </p>
         </div>
         <Link
           href="/admin/interviews/new"
-          className="rounded-md px-4 py-2 text-sm font-medium text-white"
-          style={{ background: "var(--series-cognition)" }}
+          className="btn btn-primary"
         >
           + New interview
         </Link>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border" style={{ borderColor: "var(--gridline)" }}>
+      <div className="card overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead style={{ background: "var(--surface)" }}>
             <tr style={{ color: "var(--text-muted)" }}>
@@ -52,7 +51,7 @@ export default async function InterviewsPage() {
                 </td>
                 <td className="px-4 py-2" style={{ color: "var(--text-secondary)" }}>{r.panelAsk ?? "—"}</td>
                 <td className="px-4 py-2 text-right">
-                  <Link href={`/admin/interviews/${r.id}`} style={{ color: "var(--series-cognition)" }}>Edit →</Link>
+                  <Link href={`/admin/interviews/${r.id}`} style={{ color: "var(--accent)" }}>Edit →</Link>
                 </td>
               </tr>
             ))}

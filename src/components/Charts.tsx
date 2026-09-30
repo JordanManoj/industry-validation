@@ -23,14 +23,9 @@ export function StatTile({
   hint?: string;
 }) {
   return (
-    <div
-      className="rounded-lg border p-4"
-      style={{ background: "var(--surface)", borderColor: "var(--gridline)" }}
-    >
-      <div className="text-xs uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>
-        {label}
-      </div>
-      <div className="mt-1 text-2xl font-semibold tabular-nums" style={{ color: "var(--text-primary)" }}>
+    <div className="card p-5">
+      <div className="eyebrow">{label}</div>
+      <div className="mt-2 text-3xl font-bold tracking-tight tabular-nums" style={{ color: "var(--text-primary)" }}>
         {value}
       </div>
       {hint && (

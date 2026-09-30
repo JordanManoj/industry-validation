@@ -29,7 +29,7 @@ export default async function ResponsesPage({
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold" style={{ color: "var(--text-primary)" }}>Survey responses</h1>
+          <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Survey responses</h1>
           <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
             {completeCount} complete · {all.length - completeCount} started but not finished. Click a response to read every answer.
           </p>
@@ -37,15 +37,13 @@ export default async function ResponsesPage({
         <div className="flex flex-wrap gap-2">
           <a
             href="/api/admin/responses?status=complete"
-            className="rounded-md px-4 py-2 text-sm font-medium text-white"
-            style={{ background: "var(--series-cognition)" }}
+            className="btn btn-primary"
           >
             Download CSV (complete)
           </a>
           <a
             href="/api/admin/responses?status=all"
-            className="rounded-md border px-4 py-2 text-sm"
-            style={{ borderColor: "var(--gridline)", color: "var(--text-primary)" }}
+            className="btn btn-secondary"
           >
             Download CSV (all)
           </a>
@@ -77,8 +75,7 @@ export default async function ResponsesPage({
         return (
           <details
             key={row.id}
-            className="rounded-lg border"
-            style={{ background: "var(--surface)", borderColor: "var(--gridline)" }}
+            className="card"
           >
             <summary className="flex cursor-pointer flex-wrap items-center gap-x-4 gap-y-1 p-4 text-sm">
               <span className="font-semibold" style={{ color: "var(--text-primary)" }}>Response #{number}</span>

@@ -12,7 +12,7 @@ export default async function KillCriteriaPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-xl font-semibold" style={{ color: "var(--text-primary)" }}>
+        <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>
           Kill criteria — pre-registered, live
         </h1>
         <p className="mt-1 max-w-3xl text-sm" style={{ color: "var(--text-secondary)" }}>
@@ -25,7 +25,7 @@ export default async function KillCriteriaPage() {
 
       <div className="flex flex-col gap-4">
         {results.map((k) => (
-          <div key={k.code} className="rounded-lg border p-5" style={{ background: "var(--surface)", borderColor: "var(--gridline)" }}>
+          <div key={k.code} className="card p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-3">
                 <span className="rounded px-2 py-0.5 text-xs font-semibold" style={{ background: "var(--gridline)", color: "var(--text-secondary)" }}>

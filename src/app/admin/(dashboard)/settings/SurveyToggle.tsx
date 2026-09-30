@@ -29,8 +29,7 @@ export default function SurveyToggle({ initialOpen }: { initialOpen: boolean }) 
         <button
           disabled={loading}
           onClick={() => apply(false)}
-          className="rounded-md border px-3 py-1.5 text-sm"
-          style={{ borderColor: "var(--gridline)", color: "var(--text-primary)" }}
+          className="btn btn-secondary"
         >
           Close survey
         </button>
@@ -44,8 +43,7 @@ export default function SurveyToggle({ initialOpen }: { initialOpen: boolean }) 
         <span className="text-sm font-medium" style={{ color: "var(--text-muted)" }}>Survey is GATED (closed)</span>
         <button
           onClick={() => setConfirming(true)}
-          className="rounded-md px-3 py-1.5 text-sm font-medium text-white"
-          style={{ background: "var(--series-cognition)" }}
+          className="btn btn-primary"
         >
           Open survey…
         </button>
@@ -71,8 +69,7 @@ export default function SurveyToggle({ initialOpen }: { initialOpen: boolean }) 
         </button>
         <button
           onClick={() => setConfirming(false)}
-          className="rounded-md border px-3 py-1.5 text-sm"
-          style={{ borderColor: "var(--gridline)", color: "var(--text-primary)" }}
+          className="btn btn-secondary"
         >
           Cancel
         </button>

@@ -1,5 +1,8 @@
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
+import { CalendarClock } from "lucide-react";
+import { BrandWordmark } from "@/components/Brand";
+import { FadeIn } from "@/components/motion";
 import { checkSurveyToken } from "@/lib/auth";
 import { getInviteByToken, getInviteResponse } from "@/lib/invites";
 import { isSurveyOpen } from "@/lib/settings";
@@ -11,9 +14,15 @@ export const dynamic = "force-dynamic";
 
 function Message({ title, body }: { title: string; body: string }) {
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-3 px-6 text-center">
-      <h1 className="text-xl font-semibold" style={{ color: "var(--text-primary)" }}>{title}</h1>
-      <p style={{ color: "var(--text-secondary)" }}>{body}</p>
+    <main className="brand-backdrop flex min-h-screen flex-col items-center justify-center gap-10 px-6 text-center">
+      <BrandWordmark />
+      <FadeIn className="card flex max-w-md flex-col items-center gap-4 px-8 py-10" style={{ boxShadow: "var(--shadow-lg)" }}>
+        <span className="flex h-14 w-14 items-center justify-center rounded-full" style={{ background: "var(--accent-soft)", color: "var(--accent)" }}>
+          <CalendarClock size={26} />
+        </span>
+        <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>{title}</h1>
+        <p className="leading-relaxed" style={{ color: "var(--text-secondary)" }}>{body}</p>
+      </FadeIn>
     </main>
   );
 }

@@ -15,10 +15,10 @@ export default async function SettingsPage() {
   return (
     <div className="flex flex-col gap-8 max-w-2xl">
       <div>
-        <h1 className="text-xl font-semibold" style={{ color: "var(--text-primary)" }}>Settings</h1>
+        <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Settings</h1>
       </div>
 
-      <section className="rounded-lg border p-5" style={{ background: "var(--surface)", borderColor: "var(--gridline)" }}>
+      <section className="card p-5">
         <h2 className="font-medium" style={{ color: "var(--text-primary)" }}>Survey gate</h2>
         <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
           The Item Bank v0.9 is parked. Nobody can reach or complete the survey until you open it here.
@@ -28,7 +28,7 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      <section className="rounded-lg border p-5" style={{ background: "var(--surface)", borderColor: "var(--gridline)" }}>
+      <section className="card p-5">
         <h2 className="font-medium" style={{ color: "var(--text-primary)" }}>Shared survey link (anonymous)</h2>
         <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
           One link anyone can use — responses through it are anonymous. To see who has filled the

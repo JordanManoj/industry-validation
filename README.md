@@ -14,6 +14,8 @@ separate deploy, no shared code or domain rules.
 ## Stack
 
 - **Next.js 15** (App Router) + **React 19** + **TypeScript**, Tailwind CSS 4
+- **Motion** (formerly Framer Motion) for page transitions and micro-interactions; **Lucide** icons
+- ClimbSphere brand: **Urbanist** typeface and brand palette, defined as CSS tokens in `src/app/globals.css` (light + dark mode; animations respect the OS reduced-motion setting)
 - **Postgres** via **Drizzle ORM** — [Neon](https://neon.tech) in production,
   embedded **PGlite** locally (no setup needed)
 - **Zod** for validating every survey and admin write
@@ -68,6 +70,7 @@ everyone else). Submitted responses can't be edited.
 | 29 Sep 2026 | Personal survey links (Admin → Invites) added alongside the anonymous shared link |
 | 30 Sep 2026 | After **Submit**, the link freezes on *"Thanks for taking the survey"* — personal links on every device, the shared link in the browser that submitted it |
 | 30 Sep 2026 | **Submit survey** button on every page. If a required section (About you, MaxDiff, Two candidates) is unanswered it takes the respondent there first; otherwise it asks for confirmation and submits, skipping the optional questions left |
+| 30 Sep 2026 | Redesigned survey and admin in the ClimbSphere brand: animated page transitions and progress bar, card-style answers, Most/Least buttons for MaxDiff, animated thank-you screen, new sign-in and navigation |
 
 Responses collected before a change keep their original answers in the database;
 analytics handle both the old single "hardest to assess" pick and the new multi-pick.
