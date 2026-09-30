@@ -71,6 +71,8 @@ export default function SurveyWizard({ token, personal }: { token: string; perso
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [confirmingSubmit, setConfirmingSubmit] = useState(false);
 
   const [s1, setS1] = useState<AnyRec>({ role: "", sector: "", orgSize: "", hireVolume: "", intakeTrend: "", aiMaturity: "", formalTraining: "" });
   const [s2, setS2] = useState<AnyRec>({});
@@ -141,32 +143,36 @@ export default function SurveyWizard({ token, personal }: { token: string; perso
     });
   }
 
-  function canProceed(): boolean {
-    setError(null);
-    if (current.key === "s1") {
+  // Why a required section can't be accepted yet, or null when it's complete.
+  function sectionError(key: string): string | null {
+    if (key === "s1") {
       if (!s1.role || !s1.sector || !s1.orgSize || !s1.hireVolume || !s1.intakeTrend || !s1.aiMaturity || !s1.formalTraining) {
-        setError("Please answer every question in this section before continuing.");
-        return false;
+        return "Please answer every question in this section before continuing.";
       }
     }
-    if (current.key === "s3b") {
-      if (!maxDiffComplete()) { setError("Please pick a most-important and least-important item in every set."); return false; }
-      if (!hardestToAssess.length) { setError("Please choose at least one item that is hard to assess."); return false; }
-      if (arm === "B" && !framingChanged) { setError("Please answer whether the distinction changed your answers."); return false; }
+    if (key === "s3b") {
+      if (!maxDiffComplete()) return "Please pick a most-important and least-important item in every set.";
+      if (!hardestToAssess.length) return "Please choose at least one item that is hard to assess.";
+      if (arm === "B" && !framingChanged) return "Please answer whether the distinction changed your answers.";
     }
-    if (current.key === "s4") {
-      if (!s4.choice) { setError("Please choose a candidate."); return false; }
-      if (!s4.wouldRead) { setError("Please answer whether you'd read the record."); return false; }
+    if (key === "s4") {
+      if (!s4.choice) return "Please choose a candidate.";
+      if (!s4.wouldRead) return "Please answer whether you'd read the record.";
     }
-    return true;
+    return null;
   }
 
-  async function goNext() {
-    if (!canProceed()) return;
-    if (current.key === "s1") await saveSection("section1", s1);
-    if (current.key === "s2") await saveSection("section2", s2);
-    if (current.key === "s3a") await saveSection("section3a", s3a);
-    if (current.key === "s3b") {
+  function canProceed(): boolean {
+    const message = sectionError(current.key);
+    setError(message);
+    return !message;
+  }
+
+  async function saveStep(key: string) {
+    if (key === "s1") await saveSection("section1", s1);
+    if (key === "s2") await saveSection("section2", s2);
+    if (key === "s3a") await saveSection("section3a", s3a);
+    if (key === "s3b") {
       const maxDiffPicks = maxDiffSets.map((set) => ({
         setIndex: set.setIndex,
         itemCodes: set.items.map((i) => i.code),
@@ -175,31 +181,68 @@ export default function SurveyWizard({ token, personal }: { token: string; perso
       }));
       await saveSection("section3b", { maxDiffPicks, hardestToAssess, framingChanged: arm === "B" ? framingChanged : null });
     }
-    if (current.key === "s4") await saveSection("section4", s4);
-    if (current.key === "s5") await saveSection("section5", s5);
-    if (current.key === "s6") await saveSection("section6", s6);
-    if (current.key === "s7") {
-      await saveSection("section7", s7);
-      const res = await fetch("/api/survey/complete", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      const body = await res.json();
-      if (!body.ok) { setError("Could not submit — please try again."); return; }
-      localStorage.removeItem(storageKey(token));
-      document.cookie = `${submittedCookieName(token)}=1; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
-      // replace, not push, so Back doesn't return to the filled-in form.
-      router.replace("/s/thank-you");
+    if (key === "s4") await saveSection("section4", s4);
+    if (key === "s5") await saveSection("section5", s5);
+    if (key === "s6") await saveSection("section6", s6);
+    if (key === "s7") await saveSection("section7", s7);
+  }
+
+  const saveCurrent = () => saveStep(current.key);
+
+  async function finishSurvey() {
+    setSaving(true);
+    const res = await fetch("/api/survey/complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    const body = await res.json().catch(() => ({}));
+    setSaving(false);
+    if (!body.ok) { setError("Could not submit — please try again."); return; }
+    localStorage.removeItem(storageKey(token));
+    document.cookie = `${submittedCookieName(token)}=1; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+    // replace, not push, so Back doesn't return to the filled-in form.
+    router.replace("/s/thank-you");
+  }
+
+  function moveTo(nextStep: number) {
+    setConfirmingSubmit(false);
+    setNotice(null);
+    setStep(Math.max(0, Math.min(nextStep, steps.length - 1)));
+    window.scrollTo({ top: 0 });
+  }
+
+  async function goNext() {
+    if (!canProceed()) return;
+    await saveCurrent();
+    if (current.key === "s7") { await finishSurvey(); return; }
+    moveTo(step + 1);
+  }
+
+  // Submit from any page: required sections still have to be answered, so send
+  // the respondent to the first one that isn't; otherwise confirm, then finish
+  // and skip whatever optional questions are left.
+  async function submitNow() {
+    if (!canProceed()) return;
+    const missing = steps.findIndex((s) => s.required && sectionError(s.key));
+    if (missing !== -1) {
+      await saveCurrent();
+      moveTo(missing);
+      setNotice("Almost there — please answer this section before submitting. It's one of three required ones.");
       return;
     }
-    setStep((s) => Math.min(s + 1, steps.length - 1));
+    if (!confirmingSubmit) { setConfirmingSubmit(true); return; }
+    // Save this page plus every required section, in case one was filled in
+    // and then left with Back rather than Next.
+    for (const key of new Set([current.key, ...steps.filter((s) => s.required).map((s) => s.key)])) await saveStep(key);
+    await finishSurvey();
   }
 
   function goBack() {
     setError(null);
-    setStep((s) => Math.max(s - 1, 0));
+    moveTo(step - 1);
   }
+
 
   if (error && !id) {
     return (
@@ -224,6 +267,10 @@ export default function SurveyWizard({ token, personal }: { token: string; perso
       </div>
 
       <h1 className="text-lg font-semibold" style={{ color: "var(--text-primary)" }}>{current.title}</h1>
+
+      {notice && (
+        <p className="rounded-md border p-3 text-sm" style={{ borderColor: "var(--status-warning)", color: "var(--text-primary)" }}>{notice}</p>
+      )}
 
       <div className="flex flex-col gap-6">
         {current.key === "intro" && (
@@ -449,7 +496,34 @@ export default function SurveyWizard({ token, personal }: { token: string; perso
 
       {error && <p className="text-sm" style={{ color: "var(--status-critical)" }}>{error}</p>}
 
-      <div className="flex items-center justify-between">
+      {confirmingSubmit && (
+        <div className="flex flex-col gap-3 rounded-md border p-4 text-sm" style={{ borderColor: "var(--series-cognition)", background: "var(--surface)" }}>
+          <p style={{ color: "var(--text-primary)" }}>
+            Submit your survey now? Any remaining optional questions will be skipped, and you won&apos;t be able to change your answers afterwards.
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={submitNow}
+              disabled={saving}
+              className="rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+              style={{ background: "var(--series-cognition)" }}
+            >
+              {saving ? "Submitting…" : "Yes, submit"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setConfirmingSubmit(false)}
+              className="rounded-md border px-4 py-2 text-sm"
+              style={{ borderColor: "var(--gridline)", color: "var(--text-primary)" }}
+            >
+              Keep going
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between gap-2">
         <button
           type="button"
           onClick={goBack}
@@ -459,15 +533,28 @@ export default function SurveyWizard({ token, personal }: { token: string; perso
         >
           Back
         </button>
-        <button
-          type="button"
-          onClick={goNext}
-          disabled={saving}
-          className="rounded-md px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
-          style={{ background: "var(--series-cognition)" }}
-        >
-          {current.key === "s7" ? (saving ? "Submitting…" : "Submit") : saving ? "Saving…" : "Next"}
-        </button>
+        <div className="flex items-center gap-2">
+          {current.key !== "s7" && !confirmingSubmit && (
+            <button
+              type="button"
+              onClick={submitNow}
+              disabled={saving}
+              className="rounded-md border px-4 py-2 text-sm disabled:opacity-60"
+              style={{ borderColor: "var(--series-cognition)", color: "var(--text-primary)" }}
+            >
+              Submit survey
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={goNext}
+            disabled={saving}
+            className="rounded-md px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
+            style={{ background: "var(--series-cognition)" }}
+          >
+            {current.key === "s7" ? (saving ? "Submitting…" : "Submit") : saving ? "Saving…" : "Next"}
+          </button>
+        </div>
       </div>
     </main>
   );
