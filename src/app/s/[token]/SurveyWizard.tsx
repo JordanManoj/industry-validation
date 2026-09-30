@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { buildMaxDiffSets, MaxDiffSet } from "@/lib/maxdiffDesign";
+import { submittedCookieName } from "@/lib/surveyLink";
 import {
   ROLE_OPTIONS, SECTOR_OPTIONS, ORG_SIZE_OPTIONS, HIRE_VOLUME_OPTIONS, INTAKE_TREND_OPTIONS,
   AI_MATURITY_OPTIONS, FORMAL_TRAINING_OPTIONS, SLIPPED_2_1_OPTIONS, ASSESS_AI_USE_OPTIONS,
@@ -187,7 +188,9 @@ export default function SurveyWizard({ token, personal }: { token: string; perso
       const body = await res.json();
       if (!body.ok) { setError("Could not submit — please try again."); return; }
       localStorage.removeItem(storageKey(token));
-      router.push("/s/thank-you");
+      document.cookie = `${submittedCookieName(token)}=1; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+      // replace, not push, so Back doesn't return to the filled-in form.
+      router.replace("/s/thank-you");
       return;
     }
     setStep((s) => Math.min(s + 1, steps.length - 1));

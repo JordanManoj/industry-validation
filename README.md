@@ -37,8 +37,12 @@ Two kinds of link:
 | **Personal link** — `/s/<invite token>`, created in **Admin → Invites** | One named person | Response is tied to that person |
 
 Personal links always resume the same response (any device), can't be submitted
-twice ("Already completed"), and tell the respondent their answers are
-confidential rather than anonymous.
+twice, and tell the respondent their answers are confidential rather than anonymous.
+
+After **Submit**, a link is frozen on a *"Thanks for taking the survey"* message:
+personal links on any device (checked against the database), the shared link in
+the browser that submitted it (a cookie — the shared link has to keep working for
+everyone else). Submitted responses can't be edited.
 
 ### Admin — `/admin` (password-protected)
 
@@ -62,6 +66,7 @@ confidential rather than anonymous.
 | 29 Sep 2026 | "Hardest to assess" changed from a single dropdown to checkboxes — *"Which of them are hardest to assess in your hiring process today? (max of 4)"* |
 | 29 Sep 2026 | Attention check ("Please select 'A shorter ramp-up expectation'") removed |
 | 29 Sep 2026 | Personal survey links (Admin → Invites) added alongside the anonymous shared link |
+| 30 Sep 2026 | After **Submit**, the link freezes on *"Thanks for taking the survey"* — personal links on every device, the shared link in the browser that submitted it |
 
 Responses collected before a change keep their original answers in the database;
 analytics handle both the old single "hardest to assess" pick and the new multi-pick.
