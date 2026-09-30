@@ -7,6 +7,22 @@ import { getInviteByToken, getInviteResponse } from "@/lib/invites";
 import { isSurveyOpen } from "@/lib/settings";
 import { assignArm } from "@/lib/arm";
 
+type ResponseRow = typeof surveyResponses.$inferSelect;
+
+// What the survey needs to resume: saved answers per section and the last page.
+function resumePayload(r: ResponseRow) {
+  return {
+    ok: true,
+    id: r.id,
+    arm: r.arm,
+    lastStep: r.lastStep,
+    answers: {
+      section1: r.section1, section2: r.section2, section3a: r.section3a, section3b: r.section3b,
+      section4: r.section4, section5: r.section5, section6: r.section6, section7: r.section7,
+    },
+  };
+}
+
 export async function POST(req: NextRequest) {
   const open = await isSurveyOpen();
   if (!open) return NextResponse.json({ ok: false, error: "Survey is not open" }, { status: 403 });
@@ -25,7 +41,7 @@ export async function POST(req: NextRequest) {
     if (existing?.status === "complete") {
       return NextResponse.json({ ok: false, error: "You've already completed this survey — thank you." }, { status: 409 });
     }
-    if (existing) return NextResponse.json({ ok: true, id: existing.id, arm: existing.arm });
+    if (existing) return NextResponse.json(resumePayload(existing));
 
     const [row] = await db
       .insert(surveyResponses)
@@ -34,17 +50,17 @@ export async function POST(req: NextRequest) {
       .returning();
     // Lost a race with another tab on the same link — use the row it created.
     const response = row ?? (await getInviteResponse(invite.id));
-    return NextResponse.json({ ok: true, id: response!.id, arm: response!.arm });
+    return NextResponse.json(resumePayload(response!));
   }
 
   // Shared link: resume an existing in-progress response if the client already has one.
   if (body?.id) {
     const [existing] = await db.select().from(surveyResponses).where(eq(surveyResponses.id, body.id));
     if (existing && existing.status === "in_progress" && !existing.inviteId) {
-      return NextResponse.json({ ok: true, id: existing.id, arm: existing.arm });
+      return NextResponse.json(resumePayload(existing));
     }
   }
 
   const [row] = await db.insert(surveyResponses).values({ arm: assignArm() }).returning();
-  return NextResponse.json({ ok: true, id: row.id, arm: row.arm });
+  return NextResponse.json(resumePayload(row));
 }

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowLeft, ArrowRight, Check, Clock, ListChecks, Send, ShieldCheck, Sparkles, FileText, NotebookPen } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Clock, History, ListChecks, Save, Send, ShieldCheck, Sparkles, FileText, NotebookPen } from "lucide-react";
 import { buildMaxDiffSets, MaxDiffSet } from "@/lib/maxdiffDesign";
 import { submittedCookieName } from "@/lib/surveyLink";
 import { BrandWordmark } from "@/components/Brand";
@@ -119,6 +119,27 @@ function Callout({ children }: { children: React.ReactNode }) {
   );
 }
 
+type StepDef = { key: string; title: string; required: boolean };
+
+function buildSteps(arm: "A" | "B" | null): StepDef[] {
+  const list: StepDef[] = [
+    { key: "intro", title: "About this survey", required: false },
+    { key: "s1", title: "About you and your team", required: true },
+    { key: "s2", title: "Recent experience", required: false },
+  ];
+  if (arm === "B") list.push({ key: "s3a", title: "A distinction some people draw", required: false });
+  list.push({ key: "s3b", title: "What matters most in a new hire", required: true });
+  list.push({ key: "s4", title: "Two candidates", required: true });
+  list.push({ key: "s5", title: "Where this would be used", required: false });
+  list.push({ key: "s6", title: "Your organisation's AI capability", required: false });
+  list.push({ key: "s7", title: "Last few things", required: false });
+  return list;
+}
+
+const SECTION_FOR_STEP: Record<string, string> = {
+  s1: "section1", s2: "section2", s3a: "section3a", s3b: "section3b", s4: "section4", s5: "section5", s6: "section6", s7: "section7",
+};
+
 // Page transition: slides forward or back depending on direction.
 const pageVariants = {
   enter: (dir: number) => ({ opacity: 0, x: dir * 40 }),
@@ -138,6 +159,8 @@ export default function SurveyWizard({ token, personal }: { token: string; perso
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [confirmingSubmit, setConfirmingSubmit] = useState(false);
+  const [resumeTo, setResumeTo] = useState<number | null>(null);
+  const [savedToast, setSavedToast] = useState(false);
 
   const [s1, setS1] = useState<AnyRec>({ role: "", sector: "", orgSize: "", hireVolume: "", intakeTrend: "", aiMaturity: "", formalTraining: "" });
   const [s2, setS2] = useState<AnyRec>({});
@@ -164,39 +187,63 @@ export default function SurveyWizard({ token, personal }: { token: string; perso
         setId(body.id);
         setArm(body.arm);
         localStorage.setItem(storageKey(token), JSON.stringify({ id: body.id }));
+
+        // Resuming: put saved answers back and remember where they left off.
+        const a = (body.answers ?? {}) as Record<string, AnyRec | null>;
+        if (a.section1) setS1((prev) => ({ ...prev, ...a.section1 }));
+        if (a.section2) setS2(a.section2);
+        if (a.section3a) setS3a(a.section3a);
+        if (a.section3b) {
+          const b3 = a.section3b;
+          const picks = Array.isArray(b3.maxDiffPicks) ? (b3.maxDiffPicks as { setIndex: number; best: string; worst: string }[]) : [];
+          setS3bPicks(Object.fromEntries(picks.map((pk) => [pk.setIndex, { best: pk.best ?? "", worst: pk.worst ?? "" }])));
+          const h = b3.hardestToAssess;
+          setHardestToAssess(Array.isArray(h) ? (h as string[]) : typeof h === "string" && h ? [h] : []);
+          if (typeof b3.framingChanged === "string") setFramingChanged(b3.framingChanged);
+        }
+        if (a.section4) setS4((prev) => ({ ...prev, ...a.section4 }));
+        if (a.section5) setS5((prev) => ({ ...prev, ...a.section5 }));
+        if (a.section6) setS6((prev) => ({ ...prev, ...a.section6 }));
+        if (a.section7) setS7((prev) => ({ ...prev, ...a.section7 }));
+
+        const list = buildSteps(body.arm);
+        let at = body.lastStep ? list.findIndex((st) => st.key === body.lastStep) : -1;
+        if (at < 0) {
+          // No page recorded: fall back to the furthest section with saved answers.
+          list.forEach((st, i) => { if (SECTION_FOR_STEP[st.key] && a[SECTION_FOR_STEP[st.key]]) at = i; });
+        }
+        if (at > 0) setResumeTo(at);
       })
       .catch(() => setError("Could not reach the server"));
   }, [token]);
 
   const maxDiffSets: MaxDiffSet[] = useMemo(() => (id ? buildMaxDiffSets(id) : []), [id]);
 
-  async function saveSection(section: string, data: unknown) {
-    if (!id) return;
+  async function saveSection(section: string, data: unknown): Promise<boolean> {
+    if (!id) return false;
     setSaving(true);
-    await fetch("/api/survey/save", {
+    const res = await fetch("/api/survey/save", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, section, data }),
-    });
+    }).catch(() => null);
     setSaving(false);
+    return Boolean(res?.ok);
+  }
+
+  // Remember the current page on the server so Resume can come back to it.
+  function recordStep(key: string) {
+    if (!id) return;
+    fetch("/api/survey/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, step: key }),
+    }).catch(() => {});
   }
 
   const isLdOrHrbp = s1.role === "ld" || s1.role === "hrbp";
 
-  const steps = useMemo(() => {
-    const list: { key: string; title: string; required: boolean }[] = [
-      { key: "intro", title: "About this survey", required: false },
-      { key: "s1", title: "About you and your team", required: true },
-      { key: "s2", title: "Recent experience", required: false },
-    ];
-    if (arm === "B") list.push({ key: "s3a", title: "A distinction some people draw", required: false });
-    list.push({ key: "s3b", title: "What matters most in a new hire", required: true });
-    list.push({ key: "s4", title: "Two candidates", required: true });
-    list.push({ key: "s5", title: "Where this would be used", required: false });
-    list.push({ key: "s6", title: "Your organisation's AI capability", required: false });
-    list.push({ key: "s7", title: "Last few things", required: false });
-    return list;
-  }, [arm]);
+  const steps = useMemo(() => buildSteps(arm), [arm]);
 
   const current = steps[step];
 
@@ -232,10 +279,24 @@ export default function SurveyWizard({ token, personal }: { token: string; perso
     return !message;
   }
 
-  async function saveStep(key: string) {
-    if (key === "s1") await saveSection("section1", s1);
-    if (key === "s2") await saveSection("section2", s2);
-    if (key === "s3a") await saveSection("section3a", s3a);
+  // Whether a page has any answers worth saving (so Save doesn't write empty sections).
+  function stepHasData(key: string): boolean {
+    const any = (r: AnyRec) => Object.values(r).some((v) => (Array.isArray(v) ? v.length > 0 : Boolean(v)));
+    if (key === "s1") return any(s1);
+    if (key === "s2") return any(s2);
+    if (key === "s3a") return any(s3a);
+    if (key === "s3b") return Object.keys(s3bPicks).length > 0 || hardestToAssess.length > 0 || Boolean(framingChanged);
+    if (key === "s4") return any(s4);
+    if (key === "s5") return any(s5);
+    if (key === "s6") return any(s6);
+    if (key === "s7") return any(s7);
+    return false;
+  }
+
+  async function saveStep(key: string): Promise<boolean> {
+    if (key === "s1") return saveSection("section1", s1);
+    if (key === "s2") return saveSection("section2", s2);
+    if (key === "s3a") return saveSection("section3a", s3a);
     if (key === "s3b") {
       const maxDiffPicks = maxDiffSets.map((set) => ({
         setIndex: set.setIndex,
@@ -243,12 +304,28 @@ export default function SurveyWizard({ token, personal }: { token: string; perso
         best: s3bPicks[set.setIndex]?.best ?? "",
         worst: s3bPicks[set.setIndex]?.worst ?? "",
       }));
-      await saveSection("section3b", { maxDiffPicks, hardestToAssess, framingChanged: arm === "B" ? framingChanged : null });
+      return saveSection("section3b", { maxDiffPicks, hardestToAssess, framingChanged: arm === "B" ? framingChanged : null });
     }
-    if (key === "s4") await saveSection("section4", s4);
-    if (key === "s5") await saveSection("section5", s5);
-    if (key === "s6") await saveSection("section6", s6);
-    if (key === "s7") await saveSection("section7", s7);
+    if (key === "s4") return saveSection("section4", s4);
+    if (key === "s5") return saveSection("section5", s5);
+    if (key === "s6") return saveSection("section6", s6);
+    if (key === "s7") return saveSection("section7", s7);
+    return true;
+  }
+
+  // Save button: store every page with answers (even half-finished) plus the
+  // current page, so the respondent can close the tab and resume later.
+  async function saveProgress() {
+    setError(null);
+    const failed: string[] = [];
+    for (const st of steps) if (stepHasData(st.key) && !(await saveStep(st.key))) failed.push(st.key);
+    recordStep(current.key);
+    if (failed.length) {
+      setError(failed.includes("s7") ? "Please check the email address — it doesn't look valid yet." : "Couldn't save just now — please try again.");
+      return;
+    }
+    setSavedToast(true);
+    setTimeout(() => setSavedToast(false), 4500);
   }
 
   const saveCurrent = () => saveStep(current.key);
@@ -274,11 +351,14 @@ export default function SurveyWizard({ token, personal }: { token: string; perso
     setDirection(target >= step ? 1 : -1);
     setConfirmingSubmit(false);
     setNotice(null);
+    setResumeTo(null);
     setStep(target);
+    recordStep(steps[target].key);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function goNext() {
+    if (current.key === "intro" && resumeTo) { moveTo(resumeTo); return; }
     if (!canProceed()) return;
     await saveCurrent();
     if (current.key === "s7") { await finishSurvey(); return; }
@@ -394,6 +474,34 @@ export default function SurveyWizard({ token, personal }: { token: string; perso
 
             {current.key === "intro" && (
               <div className="flex flex-col gap-6">
+                {resumeTo !== null && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.4, ease: EASE_OUT }}
+                    className="card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
+                    style={{ borderColor: "var(--accent)", background: "var(--accent-soft)", boxShadow: "var(--shadow-md)" }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: "var(--accent)", color: "#fff" }}>
+                        <History size={20} />
+                      </span>
+                      <div>
+                        <p className="font-semibold" style={{ color: "var(--text-primary)" }}>Welcome back — your answers are saved</p>
+                        <p className="mt-0.5 text-sm" style={{ color: "var(--text-secondary)" }}>
+                          Pick up where you left off: <strong style={{ color: "var(--text-primary)" }}>{steps[resumeTo]?.title}</strong>
+                        </p>
+                        <button type="button" onClick={() => moveTo(1)} className="mt-1 text-sm underline" style={{ color: "var(--text-muted)" }}>
+                          Or start from the beginning (your answers stay filled in)
+                        </button>
+                      </div>
+                    </div>
+                    <button type="button" onClick={() => moveTo(resumeTo)} className="btn btn-primary shrink-0">
+                      Resume survey
+                      <ArrowRight size={16} />
+                    </button>
+                  </motion.div>
+                )}
                 <p className="text-lg leading-relaxed" style={{ color: "var(--text-secondary)" }}>
                   A short survey for people who hire, manage or develop early-career talent, about how you value AI-related judgement and skills in new hires.
                 </p>
@@ -714,6 +822,19 @@ export default function SurveyWizard({ token, personal }: { token: string; perso
       <div className="fixed inset-x-0 bottom-0 z-20 border-t backdrop-blur-xl" style={{ background: "var(--glass)", borderColor: "var(--gridline)" }}>
         <div className="mx-auto flex max-w-2xl flex-col gap-3 px-5 py-3">
           <AnimatePresence>
+            {savedToast && (
+              <motion.div key="saved" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
+                className="flex items-center gap-3 rounded-xl border px-4 py-3 text-sm"
+                style={{ borderColor: "color-mix(in srgb, var(--status-good) 45%, var(--gridline))", background: "color-mix(in srgb, var(--status-good) 10%, var(--surface))", color: "var(--text-primary)" }}>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ background: "var(--status-good)" }}>
+                  <Check size={14} strokeWidth={3} color="#fff" />
+                </span>
+                <span>
+                  <strong>Progress saved.</strong> Come back to this link any time to pick up where you left off
+                  {personal ? "." : " (on this device and browser)."}
+                </span>
+              </motion.div>
+            )}
             {error && (
               <motion.p key="error" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                 className="text-sm font-medium" style={{ color: "var(--status-critical)" }}>
@@ -740,6 +861,12 @@ export default function SurveyWizard({ token, personal }: { token: string; perso
               Back
             </button>
             <div className="flex items-center gap-2">
+              {current.key !== "intro" && !confirmingSubmit && (
+                <button type="button" onClick={saveProgress} disabled={saving} className="btn btn-ghost px-3" aria-label="Save progress">
+                  <Save size={16} />
+                  <span className="hidden sm:inline">Save</span>
+                </button>
+              )}
               {current.key !== "s7" && !confirmingSubmit && (
                 <button type="button" onClick={submitNow} disabled={saving} className="btn btn-secondary">
                   <Send size={15} />
@@ -755,7 +882,7 @@ export default function SurveyWizard({ token, personal }: { token: string; perso
                   </>
                 ) : (
                   <>
-                    {saving ? "Saving…" : current.key === "intro" ? "Start" : "Next"}
+                    {saving ? "Saving…" : current.key === "intro" ? (resumeTo ? "Resume" : "Start") : "Next"}
                     {!saving && <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />}
                   </>
                 )}

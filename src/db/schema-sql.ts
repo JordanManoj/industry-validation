@@ -111,5 +111,6 @@ CREATE TABLE IF NOT EXISTS survey_invites (
 );
 
 ALTER TABLE survey_responses ADD COLUMN IF NOT EXISTS invite_id uuid REFERENCES survey_invites(id) ON DELETE SET NULL;
+ALTER TABLE survey_responses ADD COLUMN IF NOT EXISTS last_step text;
 CREATE UNIQUE INDEX IF NOT EXISTS survey_responses_invite_id_key ON survey_responses (invite_id) WHERE invite_id IS NOT NULL;
 `;

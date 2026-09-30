@@ -49,11 +49,34 @@ export const section3bSchema = z
   );
 export type Section3B = z.infer<typeof section3bSchema>;
 
+// Lenient versions of the required sections, used when saving progress. The
+// complete route still checks the strict schemas before accepting a submit.
+// Unanswered questions arrive as "" from the form, so drafts accept empty strings.
+export const section1DraftSchema = z.object({
+  role: z.string().optional(),
+  roleOther: z.string().optional(),
+  sector: z.string().optional(),
+  sectorOther: z.string().optional(),
+  orgSize: z.string().optional(),
+  hireVolume: z.string().optional(),
+  intakeTrend: z.string().optional(),
+  aiMaturity: z.string().optional(),
+  formalTraining: z.string().optional(),
+});
+export const section3bDraftSchema = z
+  .object({
+    maxDiffPicks: z.array(z.object({ setIndex: z.number(), itemCodes: z.array(z.string()), best: z.string(), worst: z.string() })).max(5),
+    hardestToAssess: z.array(z.string()).max(4),
+    framingChanged: z.string().optional().nullable(),
+  })
+  .partial();
+
 export const section4Schema = z.object({
   choice: z.string().min(1),
   wouldRead: z.string().min(1),
 });
 export type Section4 = z.infer<typeof section4Schema>;
+export const section4DraftSchema = z.object({ choice: z.string().optional(), wouldRead: z.string().optional() });
 
 export const section5Schema = z.object({
   stage: z.array(z.string()).optional(),

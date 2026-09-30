@@ -133,6 +133,8 @@ export const surveyResponses = pgTable("survey_responses", {
   attentionCheckPassed: boolean("attention_check_passed"),
   // Set when the respondent came in through a personal invite link.
   inviteId: uuid("invite_id").references(() => surveyInvites.id, { onDelete: "set null" }),
+  // Page the respondent was last on (e.g. "s3b"), so Resume can take them back there.
+  lastStep: text("last_step"),
   // Each section stores its answers as JSON, validated against a zod schema
   // in code before every write. Keeps the schema stable while the item
   // wording is still expected to change after the interviews land.
