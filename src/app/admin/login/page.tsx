@@ -41,9 +41,9 @@ function LoginForm() {
         initial={{ opacity: 0, y: 16, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.5, ease: EASE_OUT }}
-        className="w-full max-w-sm"
+        className="w-full max-w-lg"
       >
-        <div className="mb-8 flex justify-center">
+        <div className="mb-12 flex justify-center scale-150">
           <BrandWordmark subtitle="Industry Validation" />
         </div>
         <motion.form
@@ -51,15 +51,15 @@ function LoginForm() {
           onSubmit={onSubmit}
           animate={shake ? { x: [0, -10, 10, -6, 6, 0] } : undefined}
           transition={{ duration: 0.4 }}
-          className="card flex flex-col gap-4 p-6"
+          className="card flex flex-col gap-7 p-8 sm:p-12"
           style={{ boxShadow: "var(--shadow-lg)" }}
         >
           <div>
-            <h1 className="text-xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Researcher sign-in</h1>
-            <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>Interview log, analytics and survey controls.</p>
+            <h1 className="text-3xl font-bold tracking-tight sm:text-4xl" style={{ color: "var(--text-primary)" }}>Researcher sign-in</h1>
+            <p className="mt-2 text-base sm:text-lg" style={{ color: "var(--text-secondary)" }}>Interview log, analytics and survey controls.</p>
           </div>
           <label className="relative">
-            <Lock size={16} className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2" style={{ color: "var(--text-muted)" }} />
+            <Lock size={20} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2" style={{ color: "var(--text-muted)" }} />
             <input
               type="password"
               autoFocus
@@ -67,7 +67,7 @@ function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Admin password"
               aria-label="Admin password"
-              className="input pl-10"
+              className="input py-4 pl-12 text-xl tracking-widest placeholder:tracking-normal placeholder:text-base"
             />
           </label>
           <AnimatePresence>
@@ -76,16 +76,16 @@ function LoginForm() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                className="text-sm"
+                className="text-base"
                 style={{ color: "var(--status-critical)" }}
               >
                 {error}
               </motion.p>
             )}
           </AnimatePresence>
-          <button type="submit" disabled={loading || !password} className="btn btn-primary group">
+          <button type="submit" disabled={loading || !password} className="btn btn-primary group py-4 text-lg">
             {loading ? "Signing in…" : "Sign in"}
-            {!loading && <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />}
+            {!loading && <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" />}
           </button>
         </motion.form>
       </motion.div>
