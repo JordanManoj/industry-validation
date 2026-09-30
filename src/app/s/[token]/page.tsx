@@ -1,8 +1,11 @@
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { checkSurveyToken } from "@/lib/auth";
 import { getInviteByToken, getInviteResponse } from "@/lib/invites";
 import { isSurveyOpen } from "@/lib/settings";
+import { submittedCookieName } from "@/lib/surveyLink";
 import SurveyWizard from "./SurveyWizard";
+import SurveyThanks from "../SurveyThanks";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +24,9 @@ export default async function SurveyEntry({ params }: { params: Promise<{ token:
   const invite = checkSurveyToken(token) ? null : await getInviteByToken(token);
   if (!invite && !checkSurveyToken(token)) return notFound();
 
+  // Submitted from this browser already — the link stays frozen on the thank-you message.
+  if ((await cookies()).has(submittedCookieName(token))) return <SurveyThanks />;
+
   const open = await isSurveyOpen();
   if (!open) {
     return <Message title="Not open yet" body="This survey hasn't opened yet. Please check back later, or contact whoever sent you this link." />;
@@ -28,9 +34,8 @@ export default async function SurveyEntry({ params }: { params: Promise<{ token:
 
   if (invite) {
     const response = await getInviteResponse(invite.id);
-    if (response?.status === "complete") {
-      return <Message title="Already completed" body="You've already completed this survey — thank you. Your response has been recorded." />;
-    }
+    // Personal links freeze everywhere once submitted, whichever device opens them.
+    if (response?.status === "complete") return <SurveyThanks />;
   }
 
   return <SurveyWizard token={token} personal={Boolean(invite)} />;
