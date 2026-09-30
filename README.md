@@ -71,6 +71,7 @@ everyone else). Submitted responses can't be edited.
 | 30 Sep 2026 | After **Submit**, the link freezes on *"Thanks for taking the survey"* — personal links on every device, the shared link in the browser that submitted it |
 | 30 Sep 2026 | **Submit survey** button on every page. If a required section (About you, MaxDiff, Two candidates) is unanswered it takes the respondent there first; otherwise it asks for confirmation and submits, skipping the optional questions left |
 | 30 Sep 2026 | Redesigned survey and admin in the ClimbSphere brand: animated page transitions and progress bar, card-style answers, Most/Least buttons for MaxDiff, animated thank-you screen, new sign-in and navigation |
+| 30 Sep 2026 | **Save** button and **Resume**: respondents can save part-way (even half-finished sections) and come back to the same link — a *Welcome back* card takes them to the page they were on with answers filled in. Personal links resume on any device; the shared link in the same browser. Submitting still requires the three required sections |
 
 Responses collected before a change keep their original answers in the database;
 analytics handle both the old single "hardest to assess" pick and the new multi-pick.
@@ -93,7 +94,7 @@ sync by hand: `src/db/schema-sql.ts` (the bootstrap SQL that creates them) and
 |---|---|
 | `interviews` | One row per discovery interview |
 | `construct_tallies`, `card_sorts`, `vignette_journeys`, `verbatims` | Interview detail |
-| `survey_responses` | One row per survey attempt — `status` (`in_progress` / `complete`), `arm`, timings, answers per section as JSON (`section1` … `section7`), and `invite_id` for personal-link responses |
+| `survey_responses` | One row per survey attempt — `status` (`in_progress` / `complete`), `arm`, timings, answers per section as JSON (`section1` … `section7`), `invite_id` for personal-link responses, and `last_step` (the page to resume on) |
 | `survey_invites` | Personal links — name, email, organisation, token |
 | `settings` | The survey open/closed gate |
 
