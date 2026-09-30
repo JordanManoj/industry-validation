@@ -1,40 +1,33 @@
 import Link from "next/link";
+import { BrandWordmark } from "@/components/Brand";
+import AdminNav from "./AdminNav";
 import LogoutButton from "./LogoutButton";
-
-const NAV = [
-  { href: "/admin", label: "Overview" },
-  { href: "/admin/interviews", label: "Interview log" },
-  { href: "/admin/kill-criteria", label: "Kill criteria" },
-  { href: "/admin/survey-analytics", label: "Survey analytics" },
-  { href: "/admin/responses", label: "Responses" },
-  { href: "/admin/invites", label: "Invites" },
-  { href: "/admin/settings", label: "Settings" },
-];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen">
       <header
-        className="sticky top-0 z-10 border-b px-4 py-3"
-        style={{ background: "var(--surface)", borderColor: "var(--gridline)" }}
+        className="sticky top-0 z-20 border-b backdrop-blur-xl"
+        style={{ background: "var(--glass)", borderColor: "var(--gridline)" }}
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <div className="flex items-center gap-6">
-            <span className="font-semibold" style={{ color: "var(--text-primary)" }}>
-              ClimbSphere · Industry Validation
-            </span>
-            <nav className="flex gap-4 text-sm">
-              {NAV.map((n) => (
-                <Link key={n.href} href={n.href} style={{ color: "var(--text-secondary)" }}>
-                  {n.label}
-                </Link>
-              ))}
-            </nav>
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 md:flex-row md:items-center md:justify-between md:gap-6">
+          <div className="flex items-center justify-between gap-6">
+            <Link href="/admin" className="shrink-0">
+              <BrandWordmark subtitle="Industry Validation" />
+            </Link>
+            <div className="md:hidden">
+              <LogoutButton />
+            </div>
           </div>
-          <LogoutButton />
+          <div className="min-w-0 flex-1 md:flex md:justify-center">
+            <AdminNav />
+          </div>
+          <div className="hidden md:block">
+            <LogoutButton />
+          </div>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-8 md:py-10">{children}</main>
     </div>
   );
 }

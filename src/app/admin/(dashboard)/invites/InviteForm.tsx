@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-const inputStyle = { background: "var(--page)", borderColor: "var(--gridline)", color: "var(--text-primary)" } as const;
-const inputCls = "rounded-md border px-3 py-2 text-sm";
+const inputStyle = {} as const; // styling comes from the .input class
+const inputCls = "input";
 
 interface Person {
   name: string;
@@ -99,8 +99,7 @@ export default function InviteForm() {
           type="button"
           onClick={submit}
           disabled={saving}
-          className="rounded-md px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
-          style={{ background: "var(--series-cognition)" }}
+          className="btn btn-primary"
         >
           {saving ? "Creating…" : "Create personal link" + (mode === "bulk" ? "s" : "")}
         </button>

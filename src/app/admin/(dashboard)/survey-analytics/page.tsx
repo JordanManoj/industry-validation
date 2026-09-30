@@ -63,7 +63,7 @@ export default async function SurveyAnalyticsPage({
     <div className="flex flex-col gap-10">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold" style={{ color: "var(--text-primary)" }}>Survey analytics</h1>
+          <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--text-primary)" }}>Survey analytics</h1>
           <p className="mt-1 text-sm" style={{ color: "var(--text-secondary)" }}>
             {complete.length} complete response{complete.length === 1 ? "" : "s"} of {rows.length} started
             {params.role || params.maturity ? " (filtered)" : ""}. Target n ≥ 60 for the arm comparison to
@@ -220,7 +220,7 @@ export default async function SurveyAnalyticsPage({
           </section>
 
           {/* Data quality */}
-          <section className="rounded-lg border p-5" style={{ background: "var(--surface)", borderColor: "var(--gridline)" }}>
+          <section className="card p-5">
             <h2 className="font-medium" style={{ color: "var(--text-primary)" }}>Data quality</h2>
             <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3">
               <StatTile label="Started" value={`${rows.length}`} />

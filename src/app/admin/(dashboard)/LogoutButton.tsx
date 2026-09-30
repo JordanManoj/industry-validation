@@ -1,5 +1,6 @@
 "use client";
 
+import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function LogoutButton() {
@@ -11,9 +12,9 @@ export default function LogoutButton() {
         router.push("/admin/login");
         router.refresh();
       }}
-      className="text-sm"
-      style={{ color: "var(--text-muted)" }}
+      className="btn btn-ghost px-3 py-1.5"
     >
+      <LogOut size={15} />
       Sign out
     </button>
   );
