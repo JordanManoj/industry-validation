@@ -67,6 +67,7 @@ everyone else). Submitted responses can't be edited.
 | 29 Sep 2026 | Attention check ("Please select 'A shorter ramp-up expectation'") removed |
 | 29 Sep 2026 | Personal survey links (Admin → Invites) added alongside the anonymous shared link |
 | 30 Sep 2026 | After **Submit**, the link freezes on *"Thanks for taking the survey"* — personal links on every device, the shared link in the browser that submitted it |
+| 30 Sep 2026 | **Submit survey** button on every page. If a required section (About you, MaxDiff, Two candidates) is unanswered it takes the respondent there first; otherwise it asks for confirmation and submits, skipping the optional questions left |
 
 Responses collected before a change keep their original answers in the database;
 analytics handle both the old single "hardest to assess" pick and the new multi-pick.
